@@ -70,6 +70,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyApp(modifier: Modifier = Modifier) {
@@ -104,6 +107,7 @@ fun MyApp(modifier: Modifier = Modifier) {
         Data("name12", R.drawable.horse_twelve, painterResource(R.drawable.horse_twelve))
     )
     /* ByteString conversion */
+    val horseData = drawableHorses.get(horseIndex.value).painter
     val selectedHorseData = drawableHorses.get(horseIndex.value)
     val horseImageResId = selectedHorseData.resourceId
     val context = LocalContext.current
@@ -119,7 +123,7 @@ fun MyApp(modifier: Modifier = Modifier) {
 
     /* Server communication */
     var client = OkHttpClient()
-    val wss_url = "ws://IPGOESHERE:8765"
+    val wss_url = "ws://192.168.0.39:8765"
     fun run(url: String) {
 
         val wss_request: Request = Request.Builder().url(url).build()
@@ -143,36 +147,10 @@ fun MyApp(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LazyColumn (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-                    .background(color = Color.LightGray)
-            ) {
-                items(chatMessages) { message ->
-                    Text(text = message,
-                        color= Color.Black
-                    )
-                }
-            }
-            if (!repeat.value){
-                receivedImageBitmap.value?.let {
-                    Image(
-                        modifier = Modifier
-                            .width(200.dp)
-                            .height(150.dp),
-                        bitmap = it.asImageBitmap(),
-                        contentDescription = null
-                    )
-                }
-            }else {
-                Image(
-                    modifier = Modifier
-                        .width(200.dp)
-                        .height(150.dp),
-                    painter = selectedHorseData.painter,
-                    contentDescription = null)
-            }
+            ChatMessageList(chatMessages)
+
+            DisplayImage(horseData, receivedImageBitmap.value )
+
             Row {
                 Text(text = checked.value.toString())
                 Spacer(modifier = Modifier.width(25.dp))
@@ -198,6 +176,7 @@ fun MyApp(modifier: Modifier = Modifier) {
                                     run(wss_url)
                                 } else {
                                     horseIndex.value = (horseIndex.value + 1) % drawableHorses.size
+                                    Log.d("WSS", horseIndex.value.toString())
                                 }
                                 delay(500)
                             }
@@ -238,6 +217,44 @@ fun MyApp(modifier: Modifier = Modifier) {
                 Text("Submit")
             }
         }
+    }
+}
+
+@Composable
+fun ChatMessageList(chatMessages: List<String>) {
+    LazyColumn (
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .background(color = Color.LightGray)
+    ) {
+        items(chatMessages) { message ->
+            Text(
+                text = message,
+                color= Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayImage(selectedHorseData: Painter, receivedImageBitmap: Bitmap?) {
+    if (receivedImageBitmap != null) {
+        Image(
+            modifier = Modifier
+                .width(200.dp)
+                .height(150.dp),
+            bitmap = receivedImageBitmap.asImageBitmap(),
+            contentDescription = null
+        )
+    } else {
+        Image(
+            modifier = Modifier
+                .width(200.dp)
+                .height(150.dp),
+            painter = selectedHorseData,
+            contentDescription = null
+        )
     }
 }
 
